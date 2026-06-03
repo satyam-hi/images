@@ -1,1 +1,364 @@
-images
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Professional QR Code Generator Card</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --bg-main: #f3f4f6;
+            --card-bg: #ffffff;
+            --text-dark: #1f2937;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-dark);
+            padding: 2rem 1rem;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1000px;
+            width: 100%;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            background: var(--card-bg);
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+        }
+
+        @media (max-width: 768px) {
+            .container { grid-template-columns: 1fr; }
+        }
+
+        h2 { margin-bottom: 1.5rem; font-size: 1.5rem; color: #111827; }
+        .form-group { margin-bottom: 1.25rem; }
+        label { display: block; margin-bottom: 0.5rem; font-weight: 500; font-size: 0.875rem; }
+        
+        input[type="text"], input[type="url"], textarea {
+            width: 100%;
+            padding: 0.625rem;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            transition: border-color 0.2s;
+        }
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .color-pickers {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        .color-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        input[type="color"] {
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .size-options {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+        .size-btn {
+            flex: 1;
+            padding: 0.5rem;
+            border: 1px solid #d1d5db;
+            background: #fff;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        .size-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        button.btn-submit {
+            width: 100%;
+            background: var(--primary);
+            color: white;
+            padding: 0.75rem;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        button.btn-submit:hover { background: var(--primary-hover); }
+
+        /* Preview Display Card Styles */
+        .preview-side {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            background: #f9fafb;
+            border-radius: 8px;
+            padding: 1.5rem;
+            border: 2px dashed #e5e7eb;
+        }
+
+        #qrCardPreview {
+            width: 100%;
+            max-width: 350px;
+            padding: 2rem;
+            border-radius: 16px;
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+            text-align: center;
+            margin-bottom: 1.5rem;
+            display: none; /* Shown dynamically */
+        }
+
+        .qr-card-title { font-size: 1.5rem; font-weight: 700; margin-bottom: 0.5rem; word-break: break-word;}
+        .qr-card-description { font-size: 0.95rem; margin-bottom: 1.5rem; opacity: 0.9; word-break: break-word;}
+        .qr-card-qr { margin: 1rem auto; display: inline-block; }
+        .qr-card-note { font-size: 0.85rem; margin-top: 1.5rem; opacity: 0.8; word-break: break-word;}
+
+        .action-btns {
+            display: flex;
+            gap: 1rem;
+            width: 100%;
+            max-width: 350px;
+        }
+        .btn-action {
+            flex: 1;
+            padding: 0.5rem 1rem;
+            border: 1px solid #d1d5db;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        .btn-action.download {
+            background: #10b981;
+            color: white;
+            border-color: #10b981;
+        }
+
+        /* ==========================================================================
+           CRITICAL PRINT STYLES - Hides everything except the generated card area
+           ========================================================================== */
+        @media print {
+            body, html {
+                background: none !important;
+                background-color: #ffffff !important;
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+            
+            /* Hide the entry form, side layouts, headers, and action buttons entirely */
+            .form-side, 
+            .preview-side > h2, 
+            .action-btns {
+                display: none !important;
+            }
+
+            /* Strip the main application styling wrappers */
+            .container, .preview-side {
+                display: block !important;
+                background: none !important;
+                border: none !important;
+                box-shadow: none !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                width: auto !important;
+                max-width: 100% !important;
+            }
+
+            /* Center the card cleanly on the print page asset */
+            #qrCardPreview {
+                display: block !important;
+                margin: 2rem auto !important;
+                box-shadow: none !important; /* Removes drop shadows for cleaner ink print */
+                border: 1px solid #e5e7eb; /* Adds a clean boundary line instead */
+                page-break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="form-side">
+        <h2>QR Card Generator</h2>
+        <form id="qrForm">
+            <div class="form-group">
+                <label for="urlInput">URL / Text Content *</label>
+                <input type="text" id="urlInput" placeholder="https://example.com" required value="https://example.com">
+            </div>
+            <div class="form-group">
+                <label for="ownerName">Card Heading / Name *</label>
+                <input type="text" id="ownerName" placeholder="John Doe" required value="My Shared Link">
+            </div>
+            <div class="form-group">
+                <label for="description">Sub-heading / Description</label>
+                <textarea id="description" rows="2" placeholder="Scan to open portfolio"></textarea>
+            </div>
+            <div class="form-group">
+                <label for="shortNote">Footer Note</label>
+                <input type="text" id="shortNote" placeholder="Thank you for visiting!">
+            </div>
+
+            <h3 style="font-size: 1rem; margin-bottom: 0.5rem;">QR Code Configuration</h3>
+            <div class="color-pickers">
+                <div class="color-item">
+                    <input type="color" id="qrDarkColor" value="#000000">
+                    <label>Foreground</label>
+                </div>
+                <div class="color-item">
+                    <input type="color" id="qrLightColor" value="#ffffff">
+                    <label>Background</label>
+                </div>
+            </div>
+
+            <h3 style="font-size: 1rem; margin-bottom: 0.5rem;">Card Display Colors</h3>
+            <div class="color-pickers">
+                <div class="color-item">
+                    <input type="color" id="bgColor" value="#ffffff">
+                    <label>Card BG</label>
+                </div>
+                <div class="color-item">
+                    <input type="color" id="textColor" value="#1f2937">
+                    <label>Text Color</label>
+                </div>
+            </div>
+
+            <label>Output QR Quality Size</label>
+            <div class="size-options">
+                <button type="button" class="size-btn" data-size="150">Small</button>
+                <button type="button" class="size-btn active" data-size="250">Medium</button>
+                <button type="button" class="size-btn" data-size="350">Large</button>
+            </div>
+
+            <button type="submit" class="btn-submit">Generate Working QR Card</button>
+        </form>
+    </div>
+
+    <div class="preview-side">
+        <h2 style="align-self: flex-start;">Live Card Output</h2>
+        
+        <div id="qrCardPreview">
+            <div class="qr-card-title" id="lblTitle"></div>
+            <div class="qr-card-description" id="lblDesc"></div>
+            <div class="qr-card-qr">
+                <canvas id="qrCanvasElement"></canvas>
+            </div>
+            <div class="qr-card-note" id="lblNote"></div>
+        </div>
+
+        <div class="action-btns" id="actionSection" style="display: none;">
+            <button type="button" class="btn-action" onclick="window.print()">Print Card</button>
+            <button type="button" class="btn-action download" onclick="downloadQRCode()">Download PNG</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let currentQRSize = 250;
+    let qrInstance = null;
+
+    // Handle Size Selection Configuration
+    document.querySelectorAll('.size-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            document.querySelectorAll('.size-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            currentQRSize = parseInt(btn.dataset.size);
+        });
+    });
+
+    // Handle form lifecycle and trigger generator engine
+    document.getElementById('qrForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+
+        const url = document.getElementById('urlInput').value.trim();
+        const ownerName = document.getElementById('ownerName').value.trim();
+        const description = document.getElementById('description').value.trim();
+        const shortNote = document.getElementById('shortNote').value.trim();
+        
+        const qrDarkColor = document.getElementById('qrDarkColor').value;
+        const qrLightColor = document.getElementById('qrLightColor').value;
+        const bgColor = document.getElementById('bgColor').value;
+        const textColor = document.getElementById('textColor').value;
+
+        if (!url || !ownerName) return;
+
+        // Apply Card Aesthetics Style Configurations
+        const cardElement = document.getElementById('qrCardPreview');
+        cardElement.style.backgroundColor = bgColor;
+        cardElement.style.color = textColor;
+
+        // Update Text Nodes
+        document.getElementById('lblTitle').textContent = ownerName;
+        document.getElementById('lblDesc').textContent = description;
+        document.getElementById('lblNote').textContent = shortNote ? `Note: ${shortNote}` : '';
+
+        // Generate Globally Verifiable Standards-Compliant QR Code using QRious engine
+        if(!qrInstance) {
+            qrInstance = new QRious({
+                element: document.getElementById('qrCanvasElement'),
+                value: url,
+                size: currentQRSize,
+                background: qrLightColor,
+                foreground: qrDarkColor,
+                level: 'M' // Error Correction Level Medium
+            });
+        } else {
+            qrInstance.set({
+                value: url,
+                size: currentQRSize,
+                background: qrLightColor,
+                foreground: qrDarkColor
+            });
+        }
+
+        // Show UI layout blocks
+        cardElement.style.display = 'block';
+        document.getElementById('actionSection').style.display = 'flex';
+    });
+
+    // Download Handler
+    function downloadQRCode() {
+        const canvas = document.getElementById('qrCanvasElement');
+        if (!canvas) return;
+
+        const link = document.createElement('a');
+        link.href = canvas.toDataURL('image/png');
+        link.download = `qr-code-${Date.now()}.png`;
+        link.click();
+    }
+</script>
+
+</body>
+</html>
